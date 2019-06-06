@@ -1,3 +1,5 @@
+/// <reference path="./babylon-react.d.ts" />
+
 declare namespace JSX {
   interface IntrinsicElements {
     [name: string]: any
@@ -8,5 +10,5 @@ declare namespace JSX {
 }
 
 declare module "dynamic-cdn-webpack-plugin" {
-  export class FOO {}
+  export class FOO { }
 }

@@ -1,5 +1,5 @@
 /// <reference types="cypress" />
-const {$} = Cypress
+const { $ } = Cypress
 let hasFail = false
 top.windows = top.windows || []
 // const hostParsed = /\?hostId=(.*)/.exec(window.top.location.href)
@@ -15,20 +15,20 @@ let cy2
 
 /** @type {Cypress.Cypress} */
 let Cypress2
+
 describe("main", () => {
   beforeEach(() => {
     cy.server({
       whitelist: xhr => xhr.url.includes("sockjs"),
     })
+    cy.visit(baseUrl)
+  })
+  it.only("empty spec", () => {
+    //
   })
   describe("peers", () => {})
   it("works", () => {
-    //foo
-    if (isChild) {
-      // setTimeout(() => (Cypress.ended = true), 1000)
-      return
-    }
-    cy.visit(`${baseUrl}`)
+    cy.contains("initial")
     cy.window()
       .its("peer")
       .should("ok")
@@ -37,12 +37,16 @@ describe("main", () => {
           $("button.restart", top.windows[0].document).click()
           win2 = top.windows[0]
         } else {
-          win2 = window.open(`${window.top.location.href}?isChild`) //?hostId=${id}`)
+          win2 = window.open(
+            `${window.top.location.href.split("integration")[0] +
+              "integration/worker-spec.js"}?isChild`,
+          )
           window.top.focus()
           top.windows.push(win2)
         }
         cy.wrap({
           fn: () => {
+            console.log(win2)
             if (win2.Cypress.ended) {
               return true
             }
@@ -51,7 +55,7 @@ describe("main", () => {
           .invoke("fn")
           .should("ok")
         // cy.wait(500)
-        debugger
+        // debugger
         cy.then(() => {
           cy2 = win2.cy
           Cypress2 = win2.Cypress
@@ -115,9 +119,4 @@ after(() => {
 Cypress.on("fail", err => {
   hasFail = true
   throw err
-})
-
-Cypress.mocha.getRunner().on("end", () => {
-  console.log("end")
-  Cypress.ended = true
 })

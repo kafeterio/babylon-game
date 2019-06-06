@@ -1,20 +1,29 @@
-import WithHooks from "./components/withhooks"
+// import WithHooks from "./components/withhooks"
+// import SimpleGame from "./components/simplegame"
+// import SimpleGame from "./components/simplegame"
 
 import React from "react"
 // import  from "react-dom"
 import Peer from "peerjs"
-import Debug from "debug"
-const debug = Debug("main")
+import clsx from "clsx"
+import Debug from "./support/util"
 import "mobx"
 import { observable, action } from "mobx"
 import { observer } from "mobx-react"
 import _ from "lodash"
+import { initPlayer } from "./models/player"
+import Nophysics from "./components/nophysics"
+import TextField from "@material-ui/core/TextField"
+import { Scrollbars } from "react-custom-scrollbars"
 
-Debug.enable("main")
+const { debug, debugObj } = new Debug("game:main")
+Debug.enable("game:*")
 
 class AppState {
   @observable id = localStorage.getItem("peerId") || ""
-  @observable moves: string[] = ["initial..."]
+  @observable moves: string[] = Array(50)
+    .fill("")
+    .map((x, i) => `initial:${i}`)
   @observable peer: Peer = this.createPeer()
   @observable hostConnection?: Peer.DataConnection
   @observable peerConnections: Peer.DataConnection[] = []
@@ -109,6 +118,7 @@ class AppState {
 
 @observer
 class Main extends React.Component<{ appState: AppState }> {
+  @observable inputVal = ""
   componentDidMount() {
     // if (this.peer.id) {
     //   return this.openPeer()
@@ -119,44 +129,116 @@ class Main extends React.Component<{ appState: AppState }> {
         moves: JSON.parse(window.localStorage.getItem("moves") || "[]"),
       })
     }
+
+    setInterval(
+      _.before(6, () => {
+        initPlayer(Math.random().toString(), "foo", {
+          x: Math.random() * 4,
+          y: Math.random() * 4,
+        })
+      }),
+      100,
+    )
   }
 
   render() {
     return (
       <div>
-        <input
+        <div
           style={{
             position: "absolute",
+            bottom: 0,
             left: "50%",
             transform: "translate(-50%, 0)",
           }}
-          disabled={
-            !!this.props.appState.hostId &&
-            !(
-              this.props.appState.hostConnection &&
-              this.props.appState.hostConnection.open
-            )
-          }
-          onKeyDown={e => {
-            if (e.key === "Enter") {
-              if (e.target.value.trim()) {
-                const text = e.target.value
-                e.target.value = ""
-                this.props.appState.sendMessage(text)
-              }
-            }
-          }}
-        />
-        <div
-          style={{ position: "absolute", float: "right", color: "whitesmoke" }}
         >
-          {this.props.appState.isHost || true
-            ? `http://98.242.65.45:4141/#/id/${this.props.appState.id}`
-            : ""}
+          {/* <button onClick={() => {
+            document.documentElement.requestFullscreen()
+          }} >
 
-          <pre>{this.props.appState.moves.join("\n")}</pre>
+            fullscreen
+        </button> */}
+
+          <div style={{ backgroundColor: "white" }}>
+            <TextField
+              variant="outlined"
+              style={{
+                backgroundColor: "white",
+                margin: "10px",
+              }}
+              margin="dense"
+              // floatingLabel={true}
+              label={"chat"}
+              placeholder="type to chat"
+              // className={''}
+              // style={{ color: 'whitesmoke' }}
+
+              value={this.inputVal}
+              disabled={
+                !!this.props.appState.hostId &&
+                !(
+                  this.props.appState.hostConnection &&
+                  this.props.appState.hostConnection.open
+                )
+              }
+              onChange={e => {
+                this.inputVal = e.target.value
+              }}
+              onKeyDown={e => {
+                if (e.key === "Enter") {
+                  if (e.target.value.trim()) {
+                    const text = e.target.value
+                    this.inputVal = ""
+                    this.props.appState.sendMessage(text)
+                  }
+                }
+              }}
+            />
+          </div>
         </div>
-        <WithHooks />
+
+        <div style={{ position: "fixed", float: "right", height: "100%" }}>
+          <div
+            style={{
+              // position: 'absolute',
+              display: "flex",
+              // flexDirection: "column-reverse",
+              color: "whitesmoke",
+              paddingLeft: "10px",
+              height: "100%",
+              width: "200px",
+              listStyle: "none",
+            }}
+          >
+            <Scrollbars
+              style={{ color: "white" }}
+              renderThumbVertical={props => (
+                <div
+                  {...props}
+                  style={{ backgroundColor: "white", borderRadius: "3px" }}
+                  className="thumbVertical"
+                />
+              )}
+              ref={obj => (this.scroll = obj)}
+              onUpdate={update => {
+                this.scroll.scrollToBottom()
+                debugObj({ update })
+                return update
+              }}
+            >
+              >
+              {this.props.appState.moves.map(text => (
+                <li>{text}</li>
+              ))}
+            </Scrollbars>
+            {/* 
+            {this.props.appState.isHost || true
+              ? `http://98.242.65.45:4141/#/id/${this.props.appState.id}`
+              : ""} */}
+          </div>
+        </div>
+        {/* <WithHooks /> */}
+        {/* <Nophysics /> */}
       </div>
     )
   }

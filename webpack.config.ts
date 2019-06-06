@@ -2,6 +2,8 @@ import _ from "lodash"
 import webpack from "webpack"
 import path from "path"
 import HtmlWebpackPlugin from "html-webpack-plugin"
+import CleanWebpackPlugin from "clean-webpack-plugin"
+import MiniCSSExtractWebpackPlugin = require("mini-css-extract-plugin")
 import { BundleAnalyzerPlugin } from "webpack-bundle-analyzer"
 import toCdn from "./toCdn"
 
@@ -13,11 +15,18 @@ const config: webpack.Configuration = {
   mode: "development",
   stats: {
     warningsFilter: /node_modules.*peerjs\.min\.js/,
+    errors: true,
+    warnings: true,
+    all: false,
+    builtAt: true,
+    colors: true,
+    modules: true,
+    maxModules: 400,
+    excludeModules: /main.scss/,
   },
   plugins: [
     // new BundleAnalyzerPlugin(),
     new HtmlWebpackPlugin({
-      hash: true,
       template: "./src/index.html",
     }),
     // new DynamicCdnWebpackPlugin({
@@ -26,14 +35,17 @@ const config: webpack.Configuration = {
     new webpack.ProgressPlugin(),
     new webpack.EnvironmentPlugin({
       PUBLIC_URL: "https:/brianzinn.github.io/create-react-app-babylonjs",
-      NODE_ENV: "production",
+      // NODE_ENV: "production",
     }),
+    new CleanWebpackPlugin(),
+    new MiniCSSExtractWebpackPlugin(),
   ],
   entry: "./src/index.tsx",
   output: {
     path: path.join(__dirname, "dist"),
-    filename: "[name].[chunkhash].bundle.js",
-    chunkFilename: "[name].[chunkhash].bundle.js",
+    filename: "[name].bundle.js",
+    chunkFilename: "[name].bundle.js",
+    devtoolModuleFilenameTemplate: "webpack://[namespace]/[resource-path]",
   },
   module: {
     rules: [
@@ -46,9 +58,34 @@ const config: webpack.Configuration = {
         test: /\.(svg|glb|gltf)$/,
         loader: "file-loader",
       },
+      {
+        test: /\.s?css$/,
+        exclude: /node_modules/,
+        use: [
+          { loader: MiniCSSExtractWebpackPlugin.loader },
+          {
+            loader: "css-loader",
+            options: {
+              // sourceMap: true,
+              modules: false,
+            },
+          }, // translates CSS into CommonJS
+          {
+            loader: "sass-loader",
+            // options: {
+            //   sourceMap: true,
+            //   importer: function (...args) {
+            //     args[0] = args[0].replace(/\\/g, '/')
+            //     args[1] = args[1].replace(/\\/g, '/')
+            //     return sassGlobImporter.apply(this, args)
+            //   },
+            // },
+          }, // compiles Sass to CSS, using Node Sass by default
+        ],
+      },
     ],
   },
-  // devtool: "cheap-eval-source-map",
+  devtool: "cheap-eval-source-map",
   resolve: { extensions: [".js", ".jsx", ".tsx", ".ts", ".json", ".svg", "*"] },
   devServer: {
     port: 4141,

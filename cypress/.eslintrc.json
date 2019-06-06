@@ -1,13 +1,18 @@
 {
-  "plugins": ["cypress"],
+  "plugins": [
+    "cypress"
+  ],
   "parserOptions": {
-    "ecmaVersion": 6
+    "ecmaVersion": 8
   },
   "env": {
     "cypress/globals": true
   },
   "rules": {
     "no-undef": "error",
-    "semi": ["error", "never"]
+    "semi": [
+      "error",
+      "never"
+    ]
   }
 }
